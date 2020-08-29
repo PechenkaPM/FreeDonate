@@ -28,20 +28,8 @@ use pocketmine\event\player\PlayerQuitEvent;
 class EventListener implements Listener
 {
     
-    /** @var FreeDonate */
-    private $plugin;
     /** @var array */
     public static $players = [];
-    
-    /**
-     * EventListener constructor.
-     *
-     * @param FreeDonate $plugin
-     */
-    public function __construct(FreeDonate $plugin)
-    {
-        $this->plugin = $plugin;
-    }
     
     /**
      * @param PlayerJoinEvent $event
@@ -50,14 +38,14 @@ class EventListener implements Listener
     {
         $player = $event->getPlayer();
         $name = $player->getLowerCaseName();
-        if (!$this->plugin->data->exists($name)) return;
+        if (!FreeDonate::$data->exists($name)) return;
         
-        if (($time = $this->plugin->data->get($name)) >= 1296000) {   //1296000 = 60 * 60 * 24 * 15(15 дней в секундах)
-            $player->sendMessage("§7(§cFreeDonate§7) §fВы провели на сервере 15 дней");
+        if (($time = FreeDonate::$data->get($name)) >= FreeDonate::ONLINE_TIME) {
+            FreeDonate::givePrize($player);
             return;
         }
         self::$players[$name] = time();
-        $player->sendMessage("§7(§cFreeDonate§7) §fДо получения награды осталось: ".TimeUtil::toString(1296000 - $time));
+        $player->sendMessage("§7(§cFreeDonate§7) §fДо получения награды осталось: ".TimeUtil::toString(FreeDonate::ONLINE_TIME - $time));
     }
     
     /**
@@ -68,8 +56,8 @@ class EventListener implements Listener
         $name = $event->getPlayer()->getLowerCaseName();
         if (!isset(self::$players[$name])) return;
         
-        $data = $this->plugin->data->get($name);
+        $data = FreeDonate::$data->get($name);
         $data += time() - self::$players[$name];
-        $this->plugin->data->set($name, $data);
+        FreeDonate::$data->set($name, $data);
     }
 }

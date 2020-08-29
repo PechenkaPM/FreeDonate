@@ -15,6 +15,7 @@
 namespace Pechenka\free;
 
 use Pechenka\free\events\EventListener;
+use Pechenka\free\utils\TimeUtil;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\Player;
@@ -30,15 +31,17 @@ class FreeDonate extends PluginBase
 {
     
     /** @var Config */
-    public $data;
+    public static $data;
+    /** @var int */
+    public const ONLINE_TIME = 1296000; //1296000 = 60 * 60 * 24 * 15 = 15 дней в секундах
     
     /**
      *  Включение плагина
      */
     public function onEnable()
     {
-        $this->data = new Config($this->getDataFolder() . "data.json", Config::JSON);
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+        self::$data = new Config($this->getDataFolder() . "data.json", Config::JSON);
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
     }
     
     /**
@@ -46,7 +49,7 @@ class FreeDonate extends PluginBase
      */
     public function onDisable()
     {
-        $this->data->save();
+        self::$data->save();
     }
     
     /**
@@ -59,13 +62,29 @@ class FreeDonate extends PluginBase
     public function onCommand(CommandSender $player, Command $command, string $label, array $args): bool
     {
         $name = $player->getLowerCaseName();
-        if ($this->data->exists($name)) {
-            $player->sendMessage("§7(§cFreeDonate§7) §fВы не можете начать испытание еще раз");
+        if (self::$data->exists($name)) {
+            $time = self::$data->get($name);
+            if ($time >= self::ONLINE_TIME)
+                self::givePrize($player);
+            else
+                $player->sendMessage("§7(§cFreeDonate§7) §fДо получения награды осталось: " . TimeUtil::toString(self::ONLINE_TIME - $time));
             return true;
         }
-        $this->data->set($name, 0);
+        self::$data->set($name, 0);
         EventListener::$players[$name] = time();
-        $player->sendMessage("§7(§cFreeDonate§7) §fВы начали испытание для бесплатного доната!");
+        $player->sendMessage("§7(§cFreeDonate§7) §fВы начали испытание для получения бесплатного доната!");
         return true;
+    }
+    
+    /**
+     * @param Player $player
+     */
+    public static function givePrize(Player $player): void
+    {
+        $name = $player->getLowerCaseName();
+        unset(EventListener::$players[$name]);
+        self::$data->remove($name);
+        
+        $player->sendMessage("§7(§cFreeDonate§7) §fВы провели на сервере 15 дней");
     }
 }
