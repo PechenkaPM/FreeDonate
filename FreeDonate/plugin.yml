@@ -1,0 +1,12 @@
+name: FreeDonate
+main: Pechenka\free\FreeDonate
+
+version: "1.0"
+api: 3.0.0
+
+author: 3P
+website: vk.com/vovan446
+
+commands:
+  freedonate:
+    description: "бесплатный донат"
