@@ -49,6 +49,11 @@ class FreeDonate extends PluginBase
      */
     public function onDisable()
     {
+        foreach (EventListener::$players as $name => $time) {
+            $data = self::$data->get($name);
+            $data += time() - $time;
+            self::$data->set($name, $data);
+        }
         self::$data->save();
     }
     
