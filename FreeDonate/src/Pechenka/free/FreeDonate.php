@@ -63,7 +63,7 @@ class FreeDonate extends PluginBase
     {
         $name = $player->getLowerCaseName();
         if (self::$data->exists($name)) {
-            $time = self::$data->get($name);
+            $time = self::$data->get($name) + (time() - EventListener::$players[$name]);
             if ($time >= self::ONLINE_TIME)
                 self::givePrize($player);
             else
