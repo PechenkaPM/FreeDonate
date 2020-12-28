@@ -59,5 +59,6 @@ class EventListener implements Listener
         $data = FreeDonate::$data->get($name);
         $data += time() - self::$players[$name];
         FreeDonate::$data->set($name, $data);
+        unset(self::$players[$name]);
     }
 }
